@@ -44,7 +44,7 @@ def apply_data_transformations(df):
 
     # Mask Aadhaar - show only last 4 digits
     masked_aadhar = Fasd.when(
-        (Fasd.col("Aadhar_Number").isNull()) | (Fasd.trim(Fasd.col("Aadhar_Numbr")) == ""),
+        (Fasd.col("Aadhar_Number").isNull()) | (Fasd.trim(Fasd.col("Aadhar_Number")) == ""),
         Fasd.lit(None)
     ).otherwise(
         Fasd.concat(
