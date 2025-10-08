@@ -9,8 +9,101 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest # or windows-latest, macos-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run a script
-        run: echo "Hello from GitHub-hosted runner!"
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+          # Install any additional dependencies if requirements.txt exists
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          
+      - name: Check Python syntax for all .py files
+        run: |
+          Write-Host "Checking Python syntax for all .py files..."
+          $pyFiles = Get-ChildItem -Path . -Name "*.py" -Recurse
+          $hasErrors = $false
+          
+          foreach ($file in $pyFiles) {
+            Write-Host "Checking syntax for: $file"
+            $result = python -m py_compile $file
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Syntax error in file: $file"
+              $hasErrors = $true
+            } else {
+              Write-Host "✓ $file - OK"
+            }
+          }
+          
+          if ($hasErrors) {
+            Write-Error "Build failed: Python syntax errors found in one or more files"
+            exit 1
+          } else {
+            Write-Host "✓ All Python files compiled successfully"
+          }
+          
+      - name: Run unit tests with coverage
+        run: |
+          Write-Host "Running unit tests with coverage..."
+          pytest --cov=. --cov-report=xml --cov-report=term-missing --junit-xml=test-results.xml -v
+          
+      - name: Check test coverage and pass rate
+        run: |
+          Write-Host "Checking test results and coverage..."
+          
+          # Parse test results from XML
+          [xml]$testResults = Get-Content test-results.xml
+          $totalTests = [int]$testResults.testsuite.tests
+          $failures = [int]$testResults.testsuite.failures
+          $errors = [int]$testResults.testsuite.errors
+          $skipped = [int]$testResults.testsuite.skipped
+          
+          $passedTests = $totalTests - $failures - $errors - $skipped
+          $passRate = if ($totalTests -gt 0) { ($passedTests / $totalTests) * 100 } else { 0 }
+          
+          Write-Host "Test Results:"
+          Write-Host "  Total tests: $totalTests"
+          Write-Host "  Passed: $passedTests"
+          Write-Host "  Failed: $failures"
+          Write-Host "  Errors: $errors"
+          Write-Host "  Skipped: $skipped"
+          Write-Host "  Pass rate: $([math]::Round($passRate, 2))%"
+          
+          # Check if pass rate meets the 90% requirement
+          if ($passRate -lt 90) {
+            Write-Error "Build failed: Test pass rate ($([math]::Round($passRate, 2))%) is below the required 90%"
+            exit 1
+          } else {
+            Write-Host "✓ Test pass rate ($([math]::Round($passRate, 2))%) meets the 90% requirement"
+          }
+          
+          # Parse coverage from coverage.xml if it exists
+          if (Test-Path coverage.xml) {
+            [xml]$coverageXml = Get-Content coverage.xml
+            $coverageRate = [float]$coverageXml.coverage.'line-rate' * 100
+            Write-Host "Code coverage: $([math]::Round($coverageRate, 2))%"
+          }
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
+            htmlcov/
+            
+      - name: Build success summary
+        run: |
+          Write-Host "🎉 Build completed successfully!"
+          Write-Host "✓ All Python files compiled without errors"
+          Write-Host "✓ Unit test pass rate is above 90%"
+          Write-Host "Build meets all quality requirements."
