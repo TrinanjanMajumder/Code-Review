@@ -1,0 +1,11 @@
+# Test requirements for the data pipeline unit tests
+pytest>=7.0.0
+pytest-mock>=3.10.0
+pytest-cov>=4.0.0
+unittest-xml-reporting>=3.2.0
+mock>=4.0.3
+
+# Optional: For more advanced testing
+pytest-xdist>=3.0.0  # For parallel test execution
+pytest-html>=3.1.0   # For HTML test reports
+pytest-bdd>=6.0.0    # For behavior-driven development testing
