@@ -1,0 +1,16 @@
+name: Enhanced PR Build Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: windows-latest # or windows-latest, macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run a script
+        run: echo "Hello from GitHub-hosted runner!"
