@@ -60,10 +60,11 @@ jobs:
           
           # Parse test results from XML
           [xml]$testResults = Get-Content test-results.xml
-          $totalTests = [int]$testResults.testsuite.tests
-          $failures = [int]$testResults.testsuite.failures
-          $errors = [int]$testResults.testsuite.errors
-          $skipped = [int]$testResults.testsuite.skipped
+          $testsuite = $testResults.testsuites.testsuite
+          $totalTests = [int]$testsuite.tests
+          $failures = [int]$testsuite.failures
+          $errors = [int]$testsuite.errors
+          $skipped = [int]$testsuite.skipped
           
           $passedTests = $totalTests - $failures - $errors - $skipped
           $passRate = if ($totalTests -gt 0) { ($passedTests / $totalTests) * 100 } else { 0 }
