@@ -48,7 +48,7 @@ def apply_data_transformations(df):
         Fasd.lit(None)
     ).otherwise(
         Fasd.concat(
-            Fasd.repeat(Fasd.lit("X"), Fasd.greatest(Fasd.lit(0), Fasd.length(Fasd.col("Aadhar_Number")) - 4)),
+            Fasd.lit("XXXXXXXX"),
             Fasd.substring(Fasd.col("Aadhar_Number"), -4, 4)
         )
     )
