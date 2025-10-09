@@ -55,6 +55,8 @@ omit = [
     "*/tests/*",
     "*/venv/*",
     "*/.venv/*",
+    "validate_hybrid_tests.py",
+    "00_configs.py",
 ]
 
 [tool.coverage.report]
